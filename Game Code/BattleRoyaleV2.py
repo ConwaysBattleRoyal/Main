@@ -301,7 +301,7 @@ class Enemy():  # represents a bullet, not the game
         """ The constructor of the class """
         # the enemy's position
         self.image = pygame.Surface([width, height])
-        # self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect()
         self.image.fill(color)
         self.width = width
         self.height = height
@@ -310,30 +310,34 @@ class Enemy():  # represents a bullet, not the game
         self.xVel = 0
         self.yVel = 0
 
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        # self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
         self.health = 10
         self.damage = 10
         self.speed = 10
 
         # Health Bar Stuff
-        self.hlthImg = pygame.Surface([width, height])
-        # self.rect = self.image.get_rect()
-        self.hlthImg.fill(color)
-        self.width = width
-        self.height = height
-        self.x = -self.width/2
-        self.y = -self.height/2
+        self.hpWidth = width
+        self.hpHeight = height/10
+        self.hpImg = pygame.Surface([width, self.hpHeight])
+        self.hpRect = self.hpImg.get_rect()
+        self.hpImg.fill(GREEN)
+        self.hpX = -self.width/2
+        self.hpY = -self.y-self.hpHeight
 
     def updateRect(self):
         self.rect.x = self.x
-        # print self.rect.x
         self.rect.y = self.y
 
     def draw(self, surface):
         """ Draw on surface """
         # blit yourself at your current position
         surface.blit(self.image, (self.x, self.y))
+
+    def drawHealth(self, surface):
+        """ Draw on surface """
+        # blit yourself at your current position
+        surface.blit(self.hpImg, (self.hpX, self.hpY))
 
     def enemyDirection(self):
         choiceX = [1,-1]
@@ -360,6 +364,13 @@ class Enemy():  # represents a bullet, not the game
     def moveEnemy(self):
         self.x += self.xVel
         self.y += self.yVel
+        self.hpWidth = self.width-((self.width/10)*(10-self.health))
+        self.hpHeight = self.height/10
+        self.hpX = self.x
+        self.hpY = self.y-self.hpHeight-2
+        self.hpImg = pygame.Surface([self.hpWidth, self.hpHeight])
+        self.hpRect = self.hpImg.get_rect()
+        self.hpImg.fill(GREEN)
         self.updateRect()
 
     def edgeBounce(self):
@@ -522,6 +533,7 @@ def drawEnemies(alist):
         enemy.moveEnemy()
         delete = enemy.enemyCleaner()
         enemy.draw(screen)
+        enemy.drawHealth(screen)
         enemy.edgeBounce()
         if delete == True:
             del alist[i]
@@ -532,7 +544,7 @@ def killPlayer(player,alist):
         i=0
         for enemy in alist:
             if player.checkCollideenemy(enemy) == True:
-                player.health -= enemy.damage
+                player.health = enemy.damage
                 print player.health
 
             if player.health <= 0:
