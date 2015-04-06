@@ -115,11 +115,26 @@ class Character():  # represents the player, not the game
         self.yAcc = 0
 
         self.health = 100
+
+        # Health Bar Stuff
+        self.hpWidth = width
+        self.hpHeight = height/10
+        self.hpImg = pygame.Surface([self.hpWidth, self.hpHeight])
+        self.hpRect = self.hpImg.get_rect()
+        self.hpImg.fill(GREEN)
+        self.hpX = -self.width/2
+        self.hpY = -self.y-self.hpHeight
         
+    def updateRect(self):
+        self.rect.x = self.x
+        self.rect.y = self.y
+
     def draw(self, surface):
         """ Draw on surface """
         # blit yourself at your current position
         surface.blit(self.image, (self.x, self.y))
+        # draw health bar
+        surface.blit(self.hpImg, (self.hpX, self.hpY))
 
     def bulletDirection(self):
         mousePos = pygame.mouse.get_pos()
@@ -210,6 +225,14 @@ class Character():  # represents the player, not the game
     def moveChar(self):
         self.x += self.xVel
         self.y += self.yVel
+        self.hpWidth = self.width-((self.width/100)*(100-self.health))
+        self.hpHeight = self.height/10
+        self.hpX = self.x
+        self.hpY = self.y-self.hpHeight-2
+        self.hpImg = pygame.Surface([self.hpWidth, self.hpHeight])
+        self.hpRect = self.hpImg.get_rect()
+        self.hpImg.fill(GREEN)
+        self.updateRect()
 
     def checkX(self,other):
         if other.rect.x+other.width >= self.rect.x and other.rect.x+other.width <= self.rect.x+self.width:
@@ -333,10 +356,7 @@ class Enemy():  # represents a bullet, not the game
         """ Draw on surface """
         # blit yourself at your current position
         surface.blit(self.image, (self.x, self.y))
-
-    def drawHealth(self, surface):
-        """ Draw on surface """
-        # blit yourself at your current position
+        # draw health bar
         surface.blit(self.hpImg, (self.hpX, self.hpY))
 
     def enemyDirection(self):
@@ -433,13 +453,40 @@ class Box():  # represents the player, not the game
         # blit yourself at your current position
         surface.blit(self.image, (self.x, self.y))
         
-    def printBoxtext(self,string,color):
+    def printBoxtextCenter(self,words,color):
         # print stuff
-        string = str(tileVal)
+        string = str(words)
         label = font.render(string,True,color)
         labelRect = label.get_rect()
         area = font.size(string)  
-        labelRect.center = (x-area[0]/2, y-area[1]/2)
+        labelRect.center = (self.x+self.width/2-area[0]/2, self.y+self.height/2-area[1]/2)
+        screen.blit(label, (labelRect.center))
+
+    def printBoxtextCentertitle(self,words,color):
+        # print stuff
+        string = str(words)
+        label = titleFont.render(string,True,color)
+        labelRect = label.get_rect()
+        area = titleFont.size(string)  
+        labelRect.center = (self.x+self.width/2-area[0]/2, self.y+self.height/2-area[1]/2)
+        screen.blit(label, (labelRect.center))
+
+    def printBoxtextTop(self,words,color):
+        # print stuff
+        string = str(words)
+        label = font.render(string,True,color)
+        labelRect = label.get_rect()
+        area = font.size(string)  
+        labelRect.center = (self.x+self.width/2-area[0]/2, self.y)
+        screen.blit(label, (labelRect.center))
+
+    def printBoxtextToptitle(self,words,color):
+        # print stuff
+        string = str(words)
+        label = titleFont.render(string,True,color)
+        labelRect = label.get_rect()
+        area = titleFont.size(string)  
+        labelRect.center = (self.x+self.width/2-area[0]/2, self.y)
         screen.blit(label, (labelRect.center))
 
     def checkX(self,mousex):
@@ -461,7 +508,6 @@ class Box():  # represents the player, not the game
             inY = self.checkY(mouseY)
             if inX == True and inY == True:
                 return True
-
 
     def clickPlay(self):
         if self.checkClickbox() == True:
@@ -533,7 +579,6 @@ def drawEnemies(alist):
         enemy.moveEnemy()
         delete = enemy.enemyCleaner()
         enemy.draw(screen)
-        enemy.drawHealth(screen)
         enemy.edgeBounce()
         if delete == True:
             del alist[i]
@@ -544,7 +589,7 @@ def killPlayer(player,alist):
         i=0
         for enemy in alist:
             if player.checkCollideenemy(enemy) == True:
-                player.health = enemy.damage
+                player.health -= enemy.damage
                 print player.health
 
             if player.health <= 0:
@@ -586,12 +631,17 @@ if __name__ == "__main__":
     world = World()
 
     # Title Screen
+    numDiffbuttons = 4
     # Boxes
     titleBackground = Background(WHITE)
     highScorebox = Box(GREY,470,95,10, screenHeight - 210)
     previousScorebox = Box(GREY,470,95,10, screenHeight - 105)
     # Buttons
     playBtn = Box(ORANGE,200,200,screenWidth - 210, screenHeight - 210)
+    easyDifficultybox = Box(LGREY,(screenWidth-50)/(numDiffbuttons),95,10, screenHeight - 315)
+    mediumDifficultybox = Box(LGREY,(screenWidth-50)/(numDiffbuttons),95,((screenWidth-50)/(numDiffbuttons))*(numDiffbuttons-3)+20, screenHeight - 315)
+    hardDifficultybox = Box(LGREY,(screenWidth-50)/(numDiffbuttons),95,((screenWidth-50)/(numDiffbuttons))*(numDiffbuttons-2)+30, screenHeight - 315)
+    wtfDifficultybox = Box(LGREY,(screenWidth-50)/(numDiffbuttons),95,((screenWidth-50)/(numDiffbuttons))*(numDiffbuttons-1)+40, screenHeight - 315)
     quitBtn = Box(DGREY,100,50,10,10)
 
 
@@ -600,9 +650,26 @@ if __name__ == "__main__":
     while titleRunning == True:
         titleBackground.draw(screen)
         playBtn.draw(screen)
-        # quitBtn.draw(screen)
+        playBtn.printBoxtextCenter('PLAY',WHITE)
+
         highScorebox.draw(screen)
+        highScorebox.printBoxtextToptitle('HIGH SCORE',WHITE)
+
         previousScorebox.draw(screen)
+        previousScorebox.printBoxtextToptitle('PREVIOUS SCORE',WHITE)
+
+        easyDifficultybox.draw(screen)
+        easyDifficultybox.printBoxtextCentertitle('EASY',WHITE)
+
+        mediumDifficultybox.draw(screen)
+        mediumDifficultybox.printBoxtextCentertitle('MEDIUM',WHITE)
+
+        hardDifficultybox.draw(screen)
+        hardDifficultybox.printBoxtextCentertitle('HARD',WHITE)
+
+        wtfDifficultybox.draw(screen)
+        wtfDifficultybox.printBoxtextCentertitle('WTF',WHITE)
+
         if playBtn.clickPlay() == False:
             break
         world.gameClose()
