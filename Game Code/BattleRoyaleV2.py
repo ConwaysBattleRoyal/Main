@@ -17,17 +17,25 @@ clock = pygame.time.Clock()
 pygame.font.init()
 bulletList = []
 enemyList = []
+btnList = []
 
 # Number Initializations
 MaxEnemies = 10
+running = True
+titleRunning = True
 
 # font initialization
-GameOver = pygame.font.SysFont('Ariel', 140, bold=True, italic=False)
+gameOverfont = pygame.font.SysFont('Ariel', 140, bold=True, italic=False)
+scoreFont = pygame.font.SysFont('Ariel', 50, bold=True, italic=False)
+titleFont = pygame.font.SysFont('Ariel', 40, bold=True, italic=False)
 font = pygame.font.SysFont('Ariel', 80, bold=True, italic=False)
+
 
 # Color Definitions
 WHITE = (255, 255, 255)
+LGREY = (200,200,200)
 GREY = (119, 136, 153)
+DGREY = (50,50,50)
 ORANGE = (255, 102, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
@@ -49,18 +57,27 @@ screen = pygame.display.set_mode((screenWidth, screenHeight))
 
 # World Class Initialization
 class World():  # represents a bullet, not the game
-    def __init__(self,color,x,y,width = 4,height = 4):
+    def __init__(self):
         """ The constructor of the class """
         self.backgrounds = []
         self.characters = []
         self.bullets = []
         self.enemys = []
         self.blocks = []
+        self.score = 0
         
     def draw(self, surface):
         """ Draw on surface """
         # blit yourself at your current position
         surface.blit(self.image, (self.x, self.y))
+
+    def gameClose(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit() # quit the screen
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    sys.exit() # quit the screen
 
 
 # Background Class Initialization
@@ -79,6 +96,7 @@ class Background():  # represents the player, not the game
         surface.blit(self.image, (self.x, self.y))
 
 
+
 # Character Class Initialization
 class Character():  # represents the player, not the game
     def __init__(self,color,x,y,width = 20,height = 20):
@@ -95,6 +113,8 @@ class Character():  # represents the player, not the game
         self.yVel = 0
         self.xAcc = 0
         self.yAcc = 0
+
+        self.health = 100
         
     def draw(self, surface):
         """ Draw on surface """
@@ -106,8 +126,10 @@ class Character():  # represents the player, not the game
         mouseX = mousePos[0]
         mouseY = mousePos[1]
 
-        xPart = float(abs(mouseX-self.x)**2)/(abs(mouseX-self.x)**2 + abs(mouseY-self.y)**2)
-        yPart = float(abs(mouseY-self.y)**2)/(abs(mouseX-self.x)**2 + abs(mouseY-self.y)**2)
+        # xPart = float(abs(mouseX-self.x)**2)/(abs(mouseX-self.x)**2 + abs(mouseY-self.y)**2)
+        # yPart = float(abs(mouseY-self.y)**2)/(abs(mouseX-self.x)**2 + abs(mouseY-self.y)**2)
+        xPart = float(abs(mouseX-self.x))/(abs(mouseX-self.x)+ abs(mouseY-self.y))
+        yPart = float(abs(mouseY-self.y))/(abs(mouseX-self.x)+ abs(mouseY-self.y))
 
         if self.x < mouseX:
             # attraction must go right
@@ -162,7 +184,6 @@ class Character():  # represents the player, not the game
             if event.type == pygame.QUIT:
                 sys.exit() # quit the screen
             if event.type == pygame.KEYDOWN:
-                
                 if event.key == pygame.K_ESCAPE:
                     sys.exit() # quit the screen
                 elif event.key == pygame.K_a:
@@ -189,7 +210,26 @@ class Character():  # represents the player, not the game
     def moveChar(self):
         self.x += self.xVel
         self.y += self.yVel
-                
+
+    def checkX(self,other):
+        if other.rect.x+other.width >= self.rect.x and other.rect.x+other.width <= self.rect.x+self.width:
+            return True
+        elif other.rect.x <= self.rect.x+self.width and other.rect.x >= self.rect.x:
+            return True
+
+    def checkY(self,other):
+        if other.rect.y+other.height >= self.rect.y and other.rect.y+other.height <= self.rect.y+self.height:
+            return True
+        elif other.rect.y <= self.rect.y+self.height and other.rect.y >= self.rect.y:
+            return True
+
+    def checkCollideenemy(self,other):
+        xCollide = self.checkX(other)
+        yCollide = self.checkY(other)
+        if xCollide == True and yCollide == True:
+            return True
+            
+        
 
 # Bullet Class Initialization
 class Bullet():  # represents a bullet, not the game
@@ -197,16 +237,21 @@ class Bullet():  # represents a bullet, not the game
         """ The constructor of the class """
         # the bullet's position
         self.image = pygame.Surface([width, height])
+        self.rect = self.image.get_rect()
         self.image.fill(color)
-        # self.rect = self.image.get_rect()
         self.width = width
         self.height = height
         self.x = x-self.width/2
         self.y = y-self.height/2
         self.xVel = 0
         self.yVel = 0
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        
+        self.rect = pygame.Rect(self.x, self.y, 4, 4)
+        self.damage = 3
+
+    def updateRect(self):
+        self.rect.x = self.x
+        self.rect.y = self.y
+
     def draw(self, surface):
         """ Draw on surface """
         # blit yourself at your current position
@@ -215,6 +260,7 @@ class Bullet():  # represents a bullet, not the game
     def moveBullet(self):
         self.x += self.xVel
         self.y += self.yVel
+        self.updateRect()
 
     def bulletCleaner(self):
         if self.x > screenWidth:
@@ -255,18 +301,34 @@ class Enemy():  # represents a bullet, not the game
         """ The constructor of the class """
         # the enemy's position
         self.image = pygame.Surface([width, height])
+        # self.rect = self.image.get_rect()
         self.image.fill(color)
-        self.rect = self.image.get_rect()
         self.width = width
         self.height = height
         self.x = -self.width/2
         self.y = -self.height/2
         self.xVel = 0
         self.yVel = 0
-        
+
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
         self.health = 10
         self.damage = 10
         self.speed = 10
+
+        # Health Bar Stuff
+        self.hlthImg = pygame.Surface([width, height])
+        # self.rect = self.image.get_rect()
+        self.hlthImg.fill(color)
+        self.width = width
+        self.height = height
+        self.x = -self.width/2
+        self.y = -self.height/2
+
+    def updateRect(self):
+        self.rect.x = self.x
+        # print self.rect.x
+        self.rect.y = self.y
 
     def draw(self, surface):
         """ Draw on surface """
@@ -298,6 +360,7 @@ class Enemy():  # represents a bullet, not the game
     def moveEnemy(self):
         self.x += self.xVel
         self.y += self.yVel
+        self.updateRect()
 
     def edgeBounce(self):
         if self.x > screenWidth or self.x < 0:
@@ -317,9 +380,84 @@ class Enemy():  # represents a bullet, not the game
         else:
             return False
 
-    
+
+    def checkX(self,other):
+        if other.rect.x+other.width >= self.rect.x and other.rect.x+other.width <= self.rect.x+self.width:
+            return True
+
+    def checkY(self,other):
+        if other.rect.y+other.height >= self.rect.y and other.rect.y+other.height <= self.rect.y+self.height:
+            return True
+
+    def checkCollidebullet(self,other):
+        xCollide = self.checkX(other)
+        yCollide = self.checkY(other)
+        if xCollide == True and yCollide == True:
+            return True
+
+    def strengthAdjust(self):
+        pass
+
+
+# init Box Class
+class Box():  # represents the player, not the game
+    def __init__(self,color,width,height,x,y):
+        """ The constructor of the class """
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        # the box's position
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        # self.val = val
+
+    def updateRect(self):
+        self.rect.x = self.x
+        # print self.rect.x
+        self.rect.y = self.y
+
+    def draw(self, surface):
+        # blit yourself at your current position
+        surface.blit(self.image, (self.x, self.y))
         
-        
+    def printBoxtext(self,string,color):
+        # print stuff
+        string = str(tileVal)
+        label = font.render(string,True,color)
+        labelRect = label.get_rect()
+        area = font.size(string)  
+        labelRect.center = (x-area[0]/2, y-area[1]/2)
+        screen.blit(label, (labelRect.center))
+
+    def checkX(self,mousex):
+        if mousex >= self.rect.x and mousex <= self.rect.x+self.width:
+            return True
+
+    def checkY(self,mousey):
+        if mousey >= self.rect.y and mousey <= self.rect.y+self.height:
+            return True
+
+    def checkClickbox(self):
+        mousePos = pygame.mouse.get_pos()
+        mouseX = mousePos[0]
+        mouseY = mousePos[1]
+        mousePress = pygame.mouse.get_pressed()
+        self.updateRect()
+        if mousePress[0] == True:
+            inX = self.checkX(mouseX)
+            inY = self.checkY(mouseY)
+            if inX == True and inY == True:
+                return True
+
+
+    def clickPlay(self):
+        if self.checkClickbox() == True:
+            # titleRunning = False
+            return False
+
+
 ################################################################################################################
 # Function Definitions                                                                                         #
 ################################################################################################################
@@ -337,6 +475,12 @@ def saveData(alist):
     dump(alist,data_file)
     data_file.close()
 
+def drawBullets(alist):
+        i=0
+        for bullet in alist:
+            bullet.moveBullet()
+            bullet.draw(screen)
+
 def generateEnemies(alist): # maybe add (isGameOver = False)
         # this function generates the colored tiles that make up the game image
         if len(alist) == 0:
@@ -348,34 +492,26 @@ def generateEnemies(alist): # maybe add (isGameOver = False)
                 enemy.y = random.randrange(screenHeight)
                 
                 enemy.draw(screen)
-                alist.append(enemy)
+                alist.append(enemy)      
 
-def drawBullets(alist):
-        i=0
-        for bullet in alist:
-            bullet.moveBullet()
-            delete = bullet.bulletCleaner()
-            bullet.draw(screen)
-            if delete == True:
-                del alist[i]
-            i+=1
-
-def killEnemy(alist,blist):
+def killEnemy(alist,blist,other):
     i=0
-    delete = False
     for enemy in alist:
         j=0
         for bullet in blist:
-            if bullet.rect.colliderect(enemy.rect) == True:
-                delete = True
-            else:
-                delete = False
-            if delete == True:
-                del alist[i]
+            if enemy.checkCollidebullet(bullet) == True:
+                enemy.health -= bullet.damage
                 del blist[j]
+            
+            delete = bullet.bulletCleaner()
+            if delete == True:
+                del blist[j]
+            
             j+=1
+        if enemy.health <= 0:
+                del alist[i]
+                other.score += 1
         i+=1
-
 
 
 def drawEnemies(alist):
@@ -389,33 +525,97 @@ def drawEnemies(alist):
         enemy.edgeBounce()
         if delete == True:
             del alist[i]
+            break
         i+=1
 
-def drawAll(alist,blist):
-    drawBullets(alist)
-    drawEnemies(blist)
-    # killEnemy(enemyList,bulletList)
+def killPlayer(player,alist):
+        i=0
+        for enemy in alist:
+            if player.checkCollideenemy(enemy) == True:
+                player.health -= enemy.damage
+                print player.health
 
-################################################################################################################
-# Pre-Run Initializatio                                                                                        #
-################################################################################################################
-# pygame.init()
-background = Background(BLACK)
-character = Character(WHITE,10,10)
+            if player.health <= 0:
+                    del player
+                    running = False
+                    return running
+            i+=1
+
+def drawAllgame(player,alist,blist,other):
+    drawEnemies(alist)
+    drawBullets(blist)
+    killEnemy(alist,blist,other)
+    return killPlayer(player,alist)
+
+def printBoxval(other,x,y):
+    # print stuff
+    string = str(other.score)
+    label = font.render(string,True,WHITE)
+    labelRect = label.get_rect()
+    area = font.size(string)  
+    labelRect.center = (x-area[0]/2, y-area[1]/2)
+    screen.blit(label,(labelRect.center))
+
+# def drawTitlescreen():
+#     playBtn.draw(screen)
+
 
 ################################################################################################################
 # Main Loop                                                                                                    #
 ################################################################################################################
 
 if __name__ == "__main__": 
-    while True:
-        background.draw(screen)
-        character.gameControl(bulletList)
-        character.moveChar()
-        drawAll(bulletList,enemyList)
-        character.draw(screen)
+
+    ################################################################################################################
+    # Pre-Run Initialization                                                                                       #
+    ################################################################################################################
+    # pygame.init()
+
+    world = World()
+
+    # Title Screen
+    # Boxes
+    titleBackground = Background(WHITE)
+    highScorebox = Box(GREY,470,95,10, screenHeight - 210)
+    previousScorebox = Box(GREY,470,95,10, screenHeight - 105)
+    # Buttons
+    playBtn = Box(ORANGE,200,200,screenWidth - 210, screenHeight - 210)
+    quitBtn = Box(DGREY,100,50,10,10)
+
+
+    
+    # Title Screen Loop
+    while titleRunning == True:
+        titleBackground.draw(screen)
+        playBtn.draw(screen)
+        # quitBtn.draw(screen)
+        highScorebox.draw(screen)
+        previousScorebox.draw(screen)
+        if playBtn.clickPlay() == False:
+            break
+        world.gameClose()
         pygame.display.flip()
         clock.tick(10)
+
+    # Game Init
+    gameBackground = Background(BLACK)
+    character = Character(WHITE,10,10)
+
+    # Game Loop
+    while running == True:
+        gameBackground.draw(screen)
+        printBoxval(world,screenWidth/2,40)
+        character.gameControl(bulletList)
+        character.moveChar()
+        character.draw(screen)
+        endGame = drawAllgame(character,enemyList,bulletList,world)
+        if endGame == False:
+            running = False
+        pygame.display.flip()
+        clock.tick(10)
+    while True:
+        background.draw(screen)
+        world.gameClose()
         
         
         
