@@ -23,6 +23,8 @@ btnList = []
 MaxEnemies = 10
 running = True
 titleRunning = True
+global waveNumber
+waveNumber = 1
 
 # font initialization
 gameOverfont = pygame.font.SysFont('Ariel', 140, bold=True, italic=False)
@@ -333,11 +335,12 @@ class Enemy():  # represents a bullet, not the game
         self.xVel = 0
         self.yVel = 0
 
-        # self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-
-        self.health = 10
-        self.damage = 10
-        self.speed = 10
+        # stats
+        self.level = 1
+        self.points = 25+self.level*5
+        self.health = random.randint(1,(self.points-2))
+        self.damage = random.randint(1,(self.points-self.health-1))
+        self.speed = random.randint(1,(self.points-self.health-self.damage))
 
         # Health Bar Stuff
         self.hpWidth = width
@@ -358,6 +361,14 @@ class Enemy():  # represents a bullet, not the game
         surface.blit(self.image, (self.x, self.y))
         # draw health bar
         surface.blit(self.hpImg, (self.hpX, self.hpY))
+
+    def updateStats(self,wave):
+        # stats
+        self.level = wave
+        self.points = 25+self.level*5
+        self.health = random.randint(1,(self.points-2))
+        self.damage = random.randint(1,(self.points-self.health-1))
+        self.speed = random.randint(1,(self.points-self.health-self.damage))
 
     def enemyDirection(self):
         choiceX = [1,-1]
@@ -410,7 +421,6 @@ class Enemy():  # represents a bullet, not the game
             return True
         else:
             return False
-
 
     def checkX(self,other):
         if other.rect.x+other.width >= self.rect.x and other.rect.x+other.width <= self.rect.x+self.width:
@@ -540,6 +550,7 @@ def drawBullets(alist):
 
 def generateEnemies(alist): # maybe add (isGameOver = False)
         # this function generates the colored tiles that make up the game image
+        wave = waveNumber
         if len(alist) == 0:
             numEnemies = random.randint(5,10)
             for enemy in range(numEnemies):
@@ -547,9 +558,15 @@ def generateEnemies(alist): # maybe add (isGameOver = False)
                 enemy = Enemy(color,0,0)
                 enemy.x = random.randrange(screenWidth)
                 enemy.y = random.randrange(screenHeight)
+                enemy.updateStats(wave)
                 
                 enemy.draw(screen)
-                alist.append(enemy)      
+                alist.append(enemy)
+            wave += 1
+            global waveNumber 
+            waveNumber = wave
+            print waveNumberdddd
+
 
 def killEnemy(alist,blist,other):
     i=0
@@ -649,6 +666,7 @@ if __name__ == "__main__":
     # Title Screen Loop
     while titleRunning == True:
         titleBackground.draw(screen)
+
         playBtn.draw(screen)
         playBtn.printBoxtextCenter('PLAY',WHITE)
 
@@ -692,8 +710,10 @@ if __name__ == "__main__":
             running = False
         pygame.display.flip()
         clock.tick(10)
+
     while True:
         background.draw(screen)
+        drawAllgame(character,enemyList,bulletList,world)
         world.gameClose()
         
         
