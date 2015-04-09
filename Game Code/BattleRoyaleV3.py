@@ -60,11 +60,17 @@ screen = pygame.display.set_mode((screenWidth, screenHeight))
 class World():  # represents a bullet, not the game
     def __init__(self):
         """ The constructor of the class """
-        self.backgrounds = []
-        self.characters = []
-        self.bullets = []
-        self.enemys = []
-        self.blocks = []
+        self.screenWidth = 700
+        self.screenHeight = 700
+        self.screenSize = [self.screenWidth,self.screenHeight]
+        self.backgroundList = []
+        self.characterList = []
+        self.bulletList = []
+        self.enemyList = []
+        self.blockList = []
+        self.maxEnemies = 30
+        self.maxCharacters = 4
+        self.difficulty = 'easy'
         self.score = 0
         self.wave = 1
         
@@ -98,7 +104,6 @@ class Background():  # represents the player, not the game
         surface.blit(self.image, (self.x, self.y))
 
 
-
 # Character Class Initialization
 class Character():  # represents the player, not the game
     def __init__(self,color,x,y,width = 20,height = 20):
@@ -127,6 +132,9 @@ class Character():  # represents the player, not the game
         self.hpX = -self.width/2
         self.hpY = -self.y-self.hpHeight
         
+    def addCharacter(self,other):
+        character = 
+
     def updateRect(self):
         self.rect.x = self.x
         self.rect.y = self.y
@@ -366,7 +374,7 @@ class Enemy():  # represents a bullet, not the game
         self.rect = self.image.get_rect()
         self.image.fill(ORANGE)
 
-    def enemyDirection(self):
+    def enemyDirectionrandom(self):
         choiceX = [1,-1]
         choiceY = [1,-1]
         changeX = random.choice(choiceX)
@@ -435,14 +443,14 @@ class Enemy():  # represents a bullet, not the game
         if xCollide == True and yCollide == True:
             return True
 
-    def lvUpmodifier(self,difficulty):
-        if difficulty == 'easy':
+    def lvUpmodifier(self,world):
+        if world.difficulty == 'easy':
             self.difficultyModifier = 1
-        elif difficulty == 'medium':
+        elif world.difficulty == 'medium':
             self.difficultyModifier = 3
-        elif difficulty == 'hard':
+        elif world.difficulty == 'hard':
             self.difficultyModifier = 6
-        elif difficulty == 'wtf':
+        elif world.difficulty == 'wtf':
             self.difficultyModifier = 12
 
     def updateRect(self):
@@ -753,7 +761,7 @@ if __name__ == "__main__":
 
     # Game Init
     gameBackground = Background(BLACK)
-    character = Character(WHITE,10,10)
+
 
     # Game Loop
     while running == True:
@@ -764,7 +772,7 @@ if __name__ == "__main__":
         character.gameControl(bulletList)
         character.moveChar()
         character.draw(screen)
-        endGame = drawAllgame(character,enemyList,bulletList,world)
+        endGame = drawAllgame(character,world.enemyList,world.bulletList,world)
         if endGame == False:
             running = False
         pygame.display.flip()
