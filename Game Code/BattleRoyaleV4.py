@@ -53,8 +53,8 @@ class World():  # represents a bullet, not the game
         # Screen Stuff
         self.screenWidth = 700
         self.screenHeight = 700
-        self.xCenter = screenWidth/2
-        self.yCenter = screenHeight/2
+        self.xCenter = self.screenWidth/2
+        self.yCenter = self.screenHeight/2
         self.screenSize = [self.screenWidth,self.screenHeight]
         
         # Lists
@@ -85,14 +85,14 @@ class World():  # represents a bullet, not the game
 
 
 # Background Class Initialization
-class Background():  # represents the player, not the game
-    def __init__(self,color = BLACK,width,height):
+class Background(World):  # represents the player, not the game
+    def __init__(self,color=BLACK):
+        super(Background, self).__init__()
         """ The constructor of the class """
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
-        # the background's position
+        self.image = pygame.Surface([World.screenWidth, World.screenHeight])
         self.rect = self.image.get_rect()
-        self.pos
+        self.image.fill(color)
+        self.pos[0,0]
 
     def addBackground(self,world):
         background = background(world.screenWidth,world.screenHeight)
@@ -116,25 +116,27 @@ class Model():  # represents the player, not the game
         self.vel[0,0]
         self.acc[0,0]
 
-        # Stats
+        # Points
         self.level = 1
         self.difficultyModifier = 1
         self.baseLvupPoints = 2
         self.basePoints = 25
         self.pointsPerlv = self.level*self.baseLvupPoints*self.difficultyModifier
         self.points = self.basePoints+self.pointsPerlv
+
+        #  Stats
         self.health = random.randint(1,(self.points-2))
         self.damage = random.randint(1,(self.points-self.health-1))
         self.speed = self.points-self.health-self.damage
 
         # Health Bar Stuff
+        self.hpPos=[self.pos[0],self.pos]
         self.hpWidth = width
         self.hpHeight = height/10
         self.hpImg = pygame.Surface([self.width, self.height])
         self.hpRect = self.hpImg.get_rect()
         self.hpImg.fill(GREEN)
-        self.hpX = -self.width/2
-        self.hpY = -self.y-self.height
+        
         self.maxHealth = self.health
 
 
@@ -167,7 +169,7 @@ class Character():  # represents the player, not the game
         self.hpY = -self.y-self.hpHeight
         
     def addCharacter(self,other):
-        character = 
+        character = Character(WHITE,0,0)
 
     def updateRect(self):
         self.rect.x = self.x
