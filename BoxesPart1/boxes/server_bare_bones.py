@@ -45,13 +45,44 @@ class Serve(Server):
 		if model.players:
 			model.Update()
 		self.SendToAll({'action':'update',
-			'update':[[p.pos for p in model.players],model.zombieList]})
+			'update':[[p.pos for p in model.players],model.sendList]})
 	
 	def Launch(self):
 		while True:
 			self.Pump()
 			self.Update()
 			sleep(0.01)
+
+class Zombie(object):
+	def __init__(self,screenSize,zombieSize,playerSize):
+		self.playerSize=playerSize
+		self.zombieSize=zombieSize
+		self.screenSize=screenSize
+		if random.randint(0,1):
+			self.pos=[random.randint(0,int(self.screenSize[0])-self.zombieSize),0]
+		else:
+			self.pos=[0,random.randint(0,int(self.screenSize[1])-self.zombieSize)]
+		self.living=True
+		self.speed=float(random.randint(3,10)/6.0)
+
+	def dist(self,player):
+		return math.sqrt((self.pos[0]-player[0])**2+(self.pos[1]-player[1])**2)
+	def update(self,playerPositions):
+		closestPlayer=playerPositions[0]
+		closestDist=self.dist(playerPositions[0])
+		for player in playerPositions:
+			currentDist=self.dist(player)
+			if currentDist<closestDist:
+				closestPlayer=player
+				closestDist=currentDist
+		if closestDist!=0:
+			xchase=(closestPlayer[0]-self.pos[0])/(2*closestDist)
+			ychase=(closestPlayer[1]-self.pos[1])/(2*closestDist)
+			self.pos[0]+=xchase*self.speed
+			self.pos[1]+=ychase*self.speed
+		d=(self.zombieSize+self.playerSize)/2
+		if closestPlayer[0]-d<self.pos[0]<closestPlayer[0]+d and closestPlayer[1]-d<self.pos[1]<closestPlayer[1]+d:
+			self.living=False
 
 class Model(object):
 	def __init__(self):
@@ -60,6 +91,7 @@ class Model(object):
 		self.zombieSize=16
 		self.players=WeakKeyDictionary()
 		self.zombieList=[]
+		self.sendList=[]
 
 	def AddPlayer(self,channel):
 		self.players[channel] = True
@@ -77,27 +109,20 @@ class Model(object):
 			player.pos[1]+=player.move[1]
 			playerPositions+=[[player.pos[0],player.pos[1]]]
 		#zombies
-		if not self.zombieList:
+		if not self.sendList:
 			self.AddZombies()
 		for zombie in self.zombieList:
-			closestPlayer=playerPositions[0]
-			closestDist=self.dist(zombie,playerPositions[0])
-			for player in playerPositions:
-				currentDist=self.dist(zombie,player)
-				if currentDist<closestDist:
-					closestPlayer=player
-					closestDist=currentDist
-			if closestDist!=0:
-				zombie[0]+=(closestPlayer[0]-zombie[0])/(2*closestDist)
-				zombie[1]+=(closestPlayer[1]-zombie[1])/(2*closestDist)
-	
-	def dist(self,zombie,player):
-		return math.sqrt((zombie[0]-player[0])**2+(zombie[1]-player[1])**2)
+			if zombie.living==True:
+				zombie.update(playerPositions)
+		self.sendList=self.ZombieListifier(self.zombieList)
+
 	def AddZombies(self):
-		for z in range(100):
-			self.zombieList+=[[
-			random.randint(0,int(self.screenSize[0])-self.zombieSize),
-			random.randint(0,int(self.screenSize[1])-self.zombieSize)]]
+		for z in range(30):
+			self.zombieList+=[Zombie(self.screenSize,self.zombieSize,self.playerSize)]
+
+	def ZombieListifier(self,zombieList):
+		return [[zombie.pos[0],zombie.pos[1]] for zombie in zombieList if zombie.living==True]
+
 
 # get command line argument of server, port
 if len(sys.argv) != 2:
