@@ -19,6 +19,7 @@ class ClientChannel(Channel):
 		self.maxhealth=10
 		self.health=10
 		self.shootDirection=()
+		self.bulletTimer=time.time()
 		Channel.__init__(self, *args, **kwargs)
 	
 	def Close(self):
@@ -126,7 +127,7 @@ class Zombie(object):
 			self.living=False
 			closestPlayer.health-=1
 			for player in model.players:
-				model.scottfree=True
+				model.beenhit=True
 				if player.health<=player.maxhealth:
 					model.scottfree=False
 
@@ -141,7 +142,6 @@ class Zombie(object):
 					self.living=False
 					if model.scottFree:
 						model.popCap+=1
-
 
 class Bullet(object):
 	def __init__(self,target,position):
@@ -167,7 +167,6 @@ class Model(object):
 		self.bulletList=[]
 		self.sendDict={}
 		self.regZomb=Standard()
-		self.bulletTimer=time.time()
 		self.attackspeed=.1 #something between 1 and .1
 		
 	def AddPlayer(self,channel):
@@ -186,8 +185,8 @@ class Model(object):
 			player.pos[1]+=1.25*player.move[1]
 			player.pos=self.clamp(player.pos,0,screenSize[0],0,screenSize[1])
 			self.playerPositions+=[[player.pos[0],player.pos[1]]]
-			if player.shootDirection and time.time()-self.bulletTimer>self.attackspeed:
-				self.bulletTimer=time.time()
+			if player.shootDirection and time.time()-player.bulletTimer>self.attackspeed:
+				player.bulletTimer=time.time()
 				self.bulletList+=[Bullet(player.shootDirection,
 					copy.copy(player.pos))]
 		#zombies

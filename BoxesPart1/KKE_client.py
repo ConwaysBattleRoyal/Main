@@ -56,6 +56,7 @@ class Client(ConnectionListener):
 
 	def Network_setup(self,data):
 		view.setup(data)
+		sleep(1)
 
 	def Network_update(self,data):
 		view.frame(data['update'])
