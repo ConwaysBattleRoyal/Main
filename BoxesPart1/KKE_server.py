@@ -42,6 +42,7 @@ class Serve(Server):
 			'playerSize':playerSize,
 			'zombieSize':zombieSize,
 			'bulletSize':bulletSize})
+		print 'sent data'
 		model.AddPlayer(channel)
 	
 	def DelPlayer(self, player):
@@ -126,10 +127,6 @@ class Zombie(object):
 		if closestPlayer.pos[0]-d<self.pos[0]<closestPlayer.pos[0]+d and closestPlayer.pos[1]-d<self.pos[1]<closestPlayer.pos[1]+d:
 			self.living=False
 			closestPlayer.health-=1
-			for player in model.players:
-				model.beenhit=True
-				if player.health<=player.maxhealth:
-					model.scottfree=False
 
 		#h is the distance between centerpoints of the bullets and the zombies
 		h=(zombieSize+bulletSize)/2
@@ -140,7 +137,7 @@ class Zombie(object):
 				self.health-=1
 				if self.health<=0:
 					self.living=False
-					if model.scottFree:
+					if all([player.health>=player.maxhealth for player in model.players]):
 						model.popCap+=1
 
 class Bullet(object):

@@ -1,2 +1,1 @@
-if True, True:
-	print 'hi'
+print all([True,True,False])

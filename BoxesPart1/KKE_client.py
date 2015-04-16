@@ -55,6 +55,7 @@ class Client(ConnectionListener):
 	    return [max(min(xmax, x), xmin),max(min(ymax, y), ymin)]
 
 	def Network_setup(self,data):
+		print 'setup complete!'
 		view.setup(data)
 
 	def Network_update(self,data):
