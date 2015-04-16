@@ -56,7 +56,6 @@ class Client(ConnectionListener):
 
 	def Network_setup(self,data):
 		view.setup(data)
-		sleep(1)
 
 	def Network_update(self,data):
 		view.frame(data['update'])
@@ -74,7 +73,8 @@ class Client(ConnectionListener):
 
 class View(object):
 	def __init__(self):	
-		pygame.init()	
+		pygame.init()
+		self.size=(0,0)	
 		self.font = pygame.font.Font(None, 24)
 		self.BLACK    = (   0,   0,   0)
 		self.WHITE    = ( 255, 255, 255)
