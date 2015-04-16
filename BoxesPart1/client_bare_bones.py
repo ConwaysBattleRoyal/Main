@@ -11,10 +11,12 @@ class Client(ConnectionListener):
 		self.Connect((host, port))
 		print "client started"
 		self.move=[0,0]
+		self.shooting=False
 	
 	def Loop(self):
 		connection.Pump()
 		self.Pump()
+
 		for event in pygame.event.get():
 			if event.type == KEYDOWN and event.key == K_LEFT:
 				self.move[0]-=1
@@ -32,7 +34,15 @@ class Client(ConnectionListener):
 				self.move[1]+=1
 			if event.type == KEYUP and event.key == K_DOWN:
 				self.move[1]-=1
-		connection.Send({'action':'move','move':self.move})
+			if event.type == MOUSEBUTTONDOWN:
+				self.shooting=True
+			if event.type == MOUSEBUTTONUP:
+				self.shooting=False
+		if self.shooting:
+			shootDirection=pygame.mouse.get_pos()
+		else:
+			shootDirection=()
+		connection.Send({'action':'playerState','move':self.move,'shoot':shootDirection})
 
 	def Network_setup(self,data):
 		view.setup(data)
@@ -63,21 +73,28 @@ class View(object):
  		self.size	   = data['screenSize']
  		self.playerSize= data['playerSize']
  		self.zombieSize= data['zombieSize']
+ 		self.bulletSize= data['bulletSize']
 		self.screen   = pygame.display.set_mode(self.size)
-		pygame.display.set_caption("Conway and Darwin")
+		pygame.display.set_caption("KILL KILL Evolution")
 
 	def frame(self,data):
 		self.screen.fill(self.WHITE)
-		for player in data[0]:
+
+		for player in data['players']:
 			pygame.draw.rect(self.screen, self.RED,[
 				player[0]-self.playerSize/2, 
 				player[1]-self.playerSize/2, 
 				self.playerSize,self.playerSize])
-		for zombie in data[1]:
+		for zombie in data['zombies']:
 			pygame.draw.rect(self.screen, self.BLACK,[
 				zombie[0]-self.zombieSize/2, 
 				zombie[1]-self.zombieSize/2, 
 				self.zombieSize,self.zombieSize])
+		for bullet in data['bullets']:
+			pygame.draw.rect(self.screen, self.GREEN,[
+				bullet[0]-self.bulletSize/2,
+				bullet[1]-self.bulletSize/2,
+				self.bulletSize,self.bulletSize])
 		pygame.display.flip()
 
 if len(sys.argv) != 2:
@@ -89,4 +106,4 @@ else:
 	view=View()
 	while 1:
 		c.Loop()
-		sleep(0.001)
+		sleep(0.0001)
