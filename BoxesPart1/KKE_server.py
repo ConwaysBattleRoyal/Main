@@ -4,6 +4,7 @@ from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 from weakref import WeakKeyDictionary
 
+# Gameplay Definitions
 screenSize=(900,700)
 zombieSize=16
 playerSize=16
@@ -29,12 +30,16 @@ class ClientChannel(Channel):
 		self.move=data['move']
 		self.shootDirection=data['shoot']
 
+
 class Serve(Server):
 	channelClass = ClientChannel
 
 	def __init__(self, *args, **kwargs):
 		Server.__init__(self, *args, **kwargs)
 		print 'Server launched'
+
+		self.titleRun = True
+		self.gameRun = True
 	
 	def Connected(self, channel, addr):
 		channel.Send({'action':'setup',
@@ -56,8 +61,10 @@ class Serve(Server):
 		self.SendToAll({'action':'update',
 			'update':model.sendDict})
 	
-	def Launch(self):
-		while True:
+	def Launch(self):	
+		while self.titleRun:
+				break
+		while self.gameRun:
 			self.Pump()
 			self.Update()
 			sleep(.01)

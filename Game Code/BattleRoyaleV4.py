@@ -319,6 +319,7 @@ class Character(Model):  # represents the player, not the game
         initBulletVel = 20
         mousePress = pygame.mouse.get_pressed()
         if mousePress[0] == True:
+            # model = Model()
             bullet = Bullet(GREY,0,0)
             bullet.x = self.x+self.width/2
             bullet.y = self.y+self.height/2
@@ -399,7 +400,7 @@ class Character(Model):  # represents the player, not the game
         
 
 # Bullet Class Initialization
-class Bullet():  # represents a bullet, not the game
+class Bullet():
     def __init__(self,color,x,y,width = 4,height = 4):
         """ The constructor of the class """
         Model.__init__(self)
@@ -827,6 +828,7 @@ if __name__ == "__main__":
     # pygame.init()
 
     world = World()
+    model = Model()
     screen = pygame.display.set_mode((world.screenWidth, world.screenHeight))
 
     # Title Screen
