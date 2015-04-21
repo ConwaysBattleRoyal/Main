@@ -101,6 +101,8 @@ class Zombie(object):
 
 	def dist(self,player): #returns distances between zombie and player
 		return math.sqrt((self.pos[0]-player[0])**2+(self.pos[1]-player[1])**2)
+		
+		
 	def evolve(self):
 		model.regZomb.walk*=self.walkDev
 		model.regZomb.run*=self.runDev
@@ -223,9 +225,10 @@ class Model(object):
 	def AddZombies(self):
 		self.zombieList+=[Zombie(self.regZomb)]
 
+	def ZombListifier(self,listy):
+		return [[item.pos[0],item.pos[1],item.health,item.maxhealth] for item in listy if item.living==True]
 	def Listifier(self,listy):
 		return [[item.pos[0],item.pos[1]] for item in listy if item.living==True]
-
 # get command line argument of server:port
 if len(sys.argv) != 2:
 	print "Usage:", sys.argv[0], "host:port"
