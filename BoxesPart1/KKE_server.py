@@ -16,8 +16,8 @@ class ClientChannel(Channel):
 	def __init__(self, *args, **kwargs):
 		self.pos=[screenSize[0]/2,screenSize[1]/2]
 		self.move=[0,0]
-		self.maxhealth=10
-		self.health=10
+		self.maxhealth=20
+		self.health=20
 		self.shootDirection=()
 		self.bulletTimer=time.time()
 		Channel.__init__(self, *args, **kwargs)
@@ -42,9 +42,8 @@ class Serve(Server):
 			'playerSize':playerSize,
 			'zombieSize':zombieSize,
 			'bulletSize':bulletSize})
-		print 'sent data'
 		model.AddPlayer(channel)
-	
+
 	def DelPlayer(self, player):
 		model.DelPlayer(player)
 
@@ -88,13 +87,25 @@ class Zombie(object):
 		self.living=True
 		x=random.randint(-3,3)/3.0
 		self.move=[x,math.sqrt(1-x**2)]
-		self.walk=standard.walk
-		self.run=standard.run
-		self.health=standard.health
-		self.prockDistance=standard.prock
+
+		#dev stands for deviation and represents how much this zombie deviates from regZomb
+		self.walkDev=random.randint(80,120)/100.0
+		self.runDev=random.randint(80,120)/100.0
+		self.healthDev=random.randint(80,120)/100.0
+		self.prockDistanceDev= random.randint(80,120)/100.0
+
+		self.walk=standard.walk*self.walkDev
+		self.run=standard.run*self.runDev
+		self.health=standard.health*self.healthDev
+		self.prockDistance=standard.prock*self.prockDistanceDev
 
 	def dist(self,player): #returns distances between zombie and player
 		return math.sqrt((self.pos[0]-player[0])**2+(self.pos[1]-player[1])**2)
+	def evolve(self):
+		model.regZomb.walk*=self.walkDev
+		model.regZomb.run*=self.runDev
+		model.regZomb.health*=self.healthDev
+		model.regZomb.prock*=self.healthDev
 
 	def update(self,playerPositions):
 		#determine the closest player and prock if they are too damn close
@@ -126,7 +137,8 @@ class Zombie(object):
 		d=(zombieSize+playerSize)/2
 		if closestPlayer.pos[0]-d<self.pos[0]<closestPlayer.pos[0]+d and closestPlayer.pos[1]-d<self.pos[1]<closestPlayer.pos[1]+d:
 			self.living=False
-			closestPlayer.health-=1
+			closestPlayer.health-=2
+			self.evolve()
 
 		#h is the distance between centerpoints of the bullets and the zombies
 		h=(zombieSize+bulletSize)/2
@@ -137,6 +149,9 @@ class Zombie(object):
 				self.health-=1
 				if self.health<=0:
 					self.living=False
+					for player in model.players:
+						if not random.randint(0,5):
+							player.health+=1
 					if all([player.health>=player.maxhealth for player in model.players]):
 						model.popCap+=1
 
@@ -157,7 +172,6 @@ class Bullet(object):
 
 class Model(object):
 	def __init__(self):
-		self.scottFree=True #scottFree is whether or not the player has escaped zombies (not been hit)
 		self.players=WeakKeyDictionary()
 		self.zombieList=[]
 		self.popCap=10
