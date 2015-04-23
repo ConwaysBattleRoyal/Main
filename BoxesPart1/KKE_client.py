@@ -194,7 +194,7 @@ class View(object):
 		self.GREEN    = (   25, 255,   25)
 		self.RED      = ( 255,   0,   0)
 		self.zombieImg = pygame.image.load('./zombieArt.png')
-		self.titleMusic = pygame.mixer.Sound("DeepTorvus.wav")
+		self.titleMusic = pygame.mixer.Sound("DeepTorvus.ogg")
 		self.gameMusic = pygame.mixer.Sound("KraidsLair.wav")
 		self.titleMusic.set_volume(1)
 		self.gameMusic.set_volume(1)
