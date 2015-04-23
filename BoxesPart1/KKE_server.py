@@ -60,10 +60,16 @@ class Serve(Server):
 			model.Update()
 		self.SendToAll({'action':'update',
 			'update':model.sendDict})
+
+	def titleLaunch(self, channel, addr):
+		if self.titleRun:
+			channel.Send({'action':'titleRunning',
+				'screenSize':screenSize})
 	
 	def Launch(self):	
-		while self.titleRun:
-				break
+		# if self.titleRun:
+			# channel.Send({'action':'titleRunning',
+			# 'screenSize':screenSize})
 		while self.gameRun:
 			self.Pump()
 			self.Update()
@@ -244,4 +250,5 @@ else:
 	host, port = sys.argv[1].split(":")
 	s = Serve(localaddr=(host, int(port)))
 	model=Model()
+	# s.titleLaunch()
 	s.Launch()
