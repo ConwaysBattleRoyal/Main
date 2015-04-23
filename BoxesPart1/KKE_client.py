@@ -5,6 +5,9 @@ from PodSixNet.Connection import connection, ConnectionListener
 from thread import *
 from pygame.locals import *
 
+pygame.mixer.pre_init(22050,-16,2,4)
+pygame.mixer.init()
+
 RED =   [(100, 0, 0),(200, 0, 0),(255, 0, 0)]
 GREEN = [(0, 100, 0),(0, 200, 0),(0, 255, 0)]
 BLUE =  [(0, 0, 100),(0, 0, 200),(0, 0, 255)]
@@ -79,10 +82,31 @@ class Client(ConnectionListener):
 		print 'Server disconnected'
 		exit()
 
+
+class Sound():
+	def __init__(self,filename):
+		""" The constructor of the class """
+		self.soundTrack = filename
+
+	def playMusic(self,loops):
+		pygame.mixer.music.play(loops,0.0)
+
+	def loadMusic(self):
+		pygame.mixer.music.load(self.soundTrack)
+		# self.playMusic(loops)
+
+	def stopMusic(self):
+		pygame.mixer.music.stop()
+
+	def fadeMusic(self,time): 
+		# time -> time to fade out in milliseconds
+		pygame.mixer.music.fadeout(time)
+
+
 # Text Class Initialization
 class Text():
 	def __init__(self,text,color,x,y,hueVal=1):
-		""" The constructor of the class """
+		""" The constructor of the text class """
 		# Text Information
 		# self.titleScreen = pygame.image.load('./KKE.png')
 		self.x = x
@@ -92,6 +116,12 @@ class Text():
 		self.clicked = False
 		self.color = color
 		self.font = pygame.font.SysFont('Ariel', 80, bold=True, italic=False)
+		self.scrollSound = pygame.mixer.Sound("scrollOver.wav")
+		self.clickSound = pygame.mixer.Sound("click.wav")
+		self.scrollSound.set_volume(.1)
+		self.clickSound.set_volume(.1)
+
+
 
 	def checkX(self,mousex,area):
 		if mousex >= self.x and mousex <= self.x+area[0]:
@@ -110,7 +140,10 @@ class Text():
 		boolX = self.checkX(mouseX,area)
 		boolY = self.checkY(mouseY,area)
 		if boolX == True and boolY == True:
-			self.hueVal = 2
+			if self.hueVal != 2:
+				# self.hoverSound.playMusic(0)
+				self.scrollSound.play()
+				self.hueVal = 2
 			return True
 
 	def checkClicked(self,area):
@@ -123,26 +156,28 @@ class Text():
 			boolY = self.checkY(mouseY,area)
 			if boolX == True and boolY == True:
 				self.hueVal = 0
-				for event in pygame.event.get():
-					if event.type == MOUSEBUTTONUP:
-						self.clicked = True
 				return True
 
 	def printText(self,view):
 		# print stuff
 		string = str(self.text)
 		area = self.font.size(string)
-		# labelRect = label.get_rect()
-		# labelRect.center = (self.x,self.y)
+		
 
 		if not self.clicked:
 			if self.checkClicked(area):
 				label = self.font.render(string,True,self.color[self.hueVal])
+				self.clickSound.play()
+				self.clicked = True
 			elif self.checkHover(area):
 				label = self.font.render(string,True,self.color[self.hueVal])
 			else:
 				self.hueVal = 1
 				label = self.font.render(string,True,self.color[self.hueVal])
+		else:
+			self.hueVal = 0
+			label = self.font.render(string,True,self.color[self.hueVal])
+
 
 		view.screen.blit(label,(self.x,self.y))
 
@@ -157,27 +192,73 @@ class View(object):
 		self.WHITE    = ( 255, 255, 255)
 		self.GREEN    = (   25, 255,   25)
 		self.RED      = ( 255,   0,   0)
-
-	# def addTxtbtn(self,text,color,x,y):
-	# 	text = Text(text,color,x,y)
-	# 	return text
+		# selfpoints_sound = pygame.mixer.Sound("point.mp3")
+		self.introMusic = Sound('DeepTorvusRemix.mp3')
+		self.introMusic.loadMusic()
 
 	def titleRunning(self):
-		# self.size = data['screenSize']
-		# os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50,50)
-		# self.screen = pygame.display.set_mode(self.size)
 		self.titleBackground = pygame.image.load('./KKE.png')
-		self.titleBackground = pygame.transform.scale(self.titleBackground, (self.size[0], self.size[1]))
-		self.screen.blit(self.titleBackground, (0, 0))
-		play = Text('Play',RED,100,500)
+		play = Text('Play',RED,100,450)
+		options = Text('Options',RED,100,520)
+		quit = Text('Quit',RED,100,590)
+		self.introMusic.playMusic(-1)
 		while True:
-			# mousePos = pygame.mouse.get_pos()
-			# print mousePos[0]
+			self.titleBackground = pygame.transform.scale(self.titleBackground, (self.size[0], self.size[1]))
 			self.screen.blit(self.titleBackground, (0, 0))
 			play.printText(self)
+			options.printText(self)
+			quit.printText(self)
 			pygame.display.flip()
+			if quit.clicked:
+				self.quitGame()
+			if options.clicked:
+				self.optionsRunning()
+				options.clicked = False
 			if play.clicked:
+				# introMusic.fadeMusic(1000)
+				# sleep(1)
 				break
+
+	def optionsRunning(self):
+		self.background.fill((0,0,0))
+		difficulty = Text('Select Difficulty:',RED,50,50)
+		easy = Text('Easy',RED,100,110)
+		medium = Text('Medium',RED,250,110)
+		hard = Text('Hard',RED,500,110)
+		back = Text('Back',RED,50,350)
+
+		screenOpt = Text('Screen Options:',RED,50,200)
+		fullscreen = Text('Fullscreen',RED,100,260)
+		normal = Text('Normal',RED,400,260)
+		normal.clicked = True
+
+		while True:
+			self.screen.blit(self.background, (0, 0))
+			difficulty.printText(self)
+			easy.printText(self)
+			medium.printText(self)
+			hard.printText(self)
+			back.printText(self)
+
+			screenOpt.printText(self)
+			fullscreen.printText(self)
+			normal.printText(self)
+
+			if fullscreen.clicked:
+				self.screen = pygame.display.set_mode([0,0],NOFRAME|FULLSCREEN|HWSURFACE|DOUBLEBUF)
+				normal.clicked = False
+				if normal.clicked:
+					self.screen = pygame.display.set_mode(self.size)
+					fullscreen.clicked = False
+
+			pygame.display.flip()
+			sleep(0.1)
+			if back.clicked:
+				back.clicked = False
+				break
+
+	def quitGame(self):
+		sys.exit()
 
 	def setup(self,data):
 		self.size	   = data['screenSize']
