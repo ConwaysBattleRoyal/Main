@@ -105,7 +105,7 @@ class Zombie(object):
 		self.walkDev=random.randint(80,120)/100.0
 		self.runDev=random.randint(80,120)/100.0
 		self.healthDev=random.randint(80,120)/100.0
-		self.prockDistanceDev= random.randint(80,120)/100.0
+		self.prockDistanceDev=random.randint(80,120)/100.0
 
 		self.walk=standard.walk*self.walkDev
 		self.run=standard.run*self.runDev
