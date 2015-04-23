@@ -95,22 +95,11 @@ class Zombie(object):
 		x=random.randint(-3,3)/3.0
 		self.move=[x,math.sqrt(1-x**2)]
 
-		#point tracking system:
-		totPts = 80
-		currPts = totPts
-		walkPts = random.randint(currPts)
-		currPts -= walkPts
-		runPts = random.randint(currPts)
-		currPts -= runPts
-		healthPts = random.randint(currPts)
-		currPts -= healthPts
-		prockPts = random.randint(currPts)
-
 		#dev stands for deviation and represents how much this zombie deviates from regZomb
-		self.walkDev=(walkPts+100)/100.0
-		self.runDev=(runPts+100)/100.0
-		self.healthDev=(healthPts+100)/100.0
-		self.prockDistanceDev= (prockPts+100)/100.0
+		self.walkDev=random.randint(80,120)/100.0
+		self.runDev=random.randint(80,120)/100.0
+		self.healthDev=random.randint(80,120)/100.0
+		self.prockDistanceDev=random.randint(80,120)/100.0
 
 		self.walk=standard.walk*self.walkDev
 		self.run=standard.run*self.runDev
