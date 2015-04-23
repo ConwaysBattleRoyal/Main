@@ -118,8 +118,8 @@ class Text():
 		self.font = pygame.font.SysFont('Ariel', 80, bold=True, italic=False)
 		self.scrollSound = pygame.mixer.Sound("scrollOver.wav")
 		self.clickSound = pygame.mixer.Sound("click.wav")
-		self.scrollSound.set_volume(.1)
-		self.clickSound.set_volume(.1)
+		self.scrollSound.set_volume(.3)
+		self.clickSound.set_volume(.3)
 
 
 
@@ -192,16 +192,19 @@ class View(object):
 		self.WHITE    = ( 255, 255, 255)
 		self.GREEN    = (   25, 255,   25)
 		self.RED      = ( 255,   0,   0)
+		self.gameMusic = pygame.mixer.Sound("DeepTorvusRemix.wav")
+		self.gameMusic.set_volume(1)
 		# selfpoints_sound = pygame.mixer.Sound("point.mp3")
-		self.introMusic = Sound('DeepTorvusRemix.mp3')
-		self.introMusic.loadMusic()
+		# self.introMusic = Sound('DeepTorvusRemix.mp3')
+		# self.introMusic.loadMusic()
 
 	def titleRunning(self):
 		self.titleBackground = pygame.image.load('./KKE.png')
 		play = Text('Play',RED,100,450)
 		options = Text('Options',RED,100,520)
 		quit = Text('Quit',RED,100,590)
-		self.introMusic.playMusic(-1)
+		# self.introMusic.playMusic(-1)
+		self.gameMusic.play(-1,0)
 		while True:
 			self.titleBackground = pygame.transform.scale(self.titleBackground, (self.size[0], self.size[1]))
 			self.screen.blit(self.titleBackground, (0, 0))
