@@ -7,6 +7,7 @@ from pygame.locals import *
 
 pygame.mixer.pre_init(22050,-16,2,4)
 pygame.mixer.init()
+pygame.init()
 
 RED =   [(100, 0, 0),(200, 0, 0),(255, 0, 0)]
 GREEN = [(0, 100, 0),(0, 200, 0),(0, 255, 0)]
@@ -192,11 +193,12 @@ class View(object):
 		self.WHITE    = ( 255, 255, 255)
 		self.GREEN    = (   25, 255,   25)
 		self.RED      = ( 255,   0,   0)
-		self.gameMusic = pygame.mixer.Sound("DeepTorvusRemix.wav")
+		self.zombieImg = pygame.image.load('./zombieArt.png')
+		self.titleMusic = pygame.mixer.Sound("DeepTorvus.wav")
+		self.gameMusic = pygame.mixer.Sound("KraidsLair.wav")
+		self.titleMusic.set_volume(1)
 		self.gameMusic.set_volume(1)
-		# selfpoints_sound = pygame.mixer.Sound("point.mp3")
-		# self.introMusic = Sound('DeepTorvusRemix.mp3')
-		# self.introMusic.loadMusic()
+		# self.wordList = []
 
 	def titleRunning(self):
 		self.titleBackground = pygame.image.load('./KKE.png')
@@ -204,8 +206,7 @@ class View(object):
 		play = Text('Play',RED,100,450)
 		options = Text('Options',RED,100,520)
 		quit = Text('Quit',RED,100,590)
-		# self.introMusic.playMusic(-1)
-		self.gameMusic.play(-1,0)
+		self.titleMusic.play(-1,0)
 		while True:
 			self.titleBackground = pygame.transform.scale(self.titleBackground, (self.size[0], self.size[1]))
 			self.screen.blit(self.titleBackground, (0, 0))
@@ -230,6 +231,7 @@ class View(object):
 		medium = Text('Medium',RED,250,110)
 		hard = Text('Hard',RED,500,110)
 		back = Text('Back',RED,50,350)
+		easy.clicked = True
 
 		screenOpt = Text('Screen Options:',RED,50,200)
 		fullscreen = Text('Fullscreen',RED,100,260)
@@ -277,16 +279,21 @@ class View(object):
 		self.background.fill((250, 250, 250))
 		self.screen.blit(self.background, (0, 0))
 		self.titleRunning()
+		self.titleMusic.stop()
+		self.gameMusic.play(-1)
 
 
 	def frame(self,data):
 		self.screen.fill(self.WHITE)
+		
 
 		for player in data['players']:
 			pygame.draw.rect(self.screen, self.RED,[
 				player[0]-self.playerSize/2, 
 				player[1]-self.playerSize/2, 
 				self.playerSize,self.playerSize])
+		# for zombie in data['zombies']:
+			# self.screen.blit(self.zombieImg, [zombie[0], zombie[1]])
 		for zombie in data['zombies']:
 			pygame.draw.rect(self.screen, self.GREEN,[
 				zombie[0]-self.zombieSize/2, 
@@ -309,7 +316,6 @@ else:
 	host, port = sys.argv[1].split(":")
 	c = Client(host, int(port))
 	view=View()
-	# view.titleRunning()
 	while 1:
 		c.Loop()
 		sleep(0.0001)
