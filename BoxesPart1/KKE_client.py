@@ -200,6 +200,7 @@ class View(object):
 
 	def titleRunning(self):
 		self.titleBackground = pygame.image.load('./KKE.png')
+		self.optionsBackground = pygame.image.load('./KKEoptions.png')
 		play = Text('Play',RED,100,450)
 		options = Text('Options',RED,100,520)
 		quit = Text('Quit',RED,100,590)
@@ -223,7 +224,7 @@ class View(object):
 				break
 
 	def optionsRunning(self):
-		self.background.fill((0,0,0))
+		self.optionsBackground = pygame.transform.scale(self.optionsBackground, (self.size[0], self.size[1]))
 		difficulty = Text('Select Difficulty:',RED,50,50)
 		easy = Text('Easy',RED,100,110)
 		medium = Text('Medium',RED,250,110)
@@ -236,7 +237,7 @@ class View(object):
 		normal.clicked = True
 
 		while True:
-			self.screen.blit(self.background, (0, 0))
+			self.screen.blit(self.optionsBackground, (0, 0))
 			difficulty.printText(self)
 			easy.printText(self)
 			medium.printText(self)
