@@ -111,10 +111,10 @@ class Zombie(object):
 		model.regZomb.prock*=self.prockDistanceDev
 
 	def enhance(self):
-		model.regZomb.walk*=1.2
-		model.regZomb.run*=1.2
-		model.regZomb.health*=1.2
-		model.regZomb.prock*=1.2
+		model.regZomb.walk*=1.1
+		model.regZomb.run*=1.1
+		model.regZomb.health*=1.1
+		model.regZomb.prock*=1.1
 
 	def update(self,playerPositions):
 		#determine the closest player and prock if they are too damn close
@@ -161,7 +161,7 @@ class Zombie(object):
 				if self.health<=0:
 					model.score+=1
 					if not model.score%20:
-						view.enhance()
+						self.enhance()
 					self.living=False
 					for player in model.players:
 						if not random.randint(0,3):
