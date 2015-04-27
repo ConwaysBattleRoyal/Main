@@ -56,7 +56,7 @@ class Client(ConnectionListener):
 			shootDirection=mousePos
 		else:
 			shootDirection=()
-		mb=25 #mouse border (ho close to edge we let mouse get)
+		mb=25 #mouse border (how close to edge we let mouse get)
 		ss=view.size
 		pygame.mouse.set_pos(self.clamp(mousePos,mb,ss[0]-mb,mb,ss[1]-mb))
 		
@@ -84,26 +84,6 @@ class Client(ConnectionListener):
 		exit()
 
 
-class Sound():
-	def __init__(self,filename):
-		""" The constructor of the class """
-		self.soundTrack = filename
-
-	def playMusic(self,loops):
-		pygame.mixer.music.play(loops,0.0)
-
-	def loadMusic(self):
-		pygame.mixer.music.load(self.soundTrack)
-		# self.playMusic(loops)
-
-	def stopMusic(self):
-		pygame.mixer.music.stop()
-
-	def fadeMusic(self,time): 
-		# time -> time to fade out in milliseconds
-		pygame.mixer.music.fadeout(time)
-
-
 # Text Class Initialization
 class Text():
 	def __init__(self,text,color,x,y,hueVal=1):
@@ -117,12 +97,11 @@ class Text():
 		self.clicked = False
 		self.color = color
 		self.font = pygame.font.SysFont('Ariel', 80, bold=True, italic=False)
+		self.fontSmall = pygame.font.SysFont('Ariel', 40, bold=True, italic=False)
 		self.scrollSound = pygame.mixer.Sound("scrollOver.wav")
 		self.clickSound = pygame.mixer.Sound("click.wav")
 		self.scrollSound.set_volume(.3)
 		self.clickSound.set_volume(.3)
-
-
 
 	def checkX(self,mousex,area):
 		if mousex >= self.x and mousex <= self.x+area[0]:
@@ -132,7 +111,7 @@ class Text():
 		if mousey >= self.y and mousey <= self.y+area[1]:
 			return True
 
-	def checkHover(self,area):
+	def checkHover(self,area,sound):
 		for event in pygame.event.get():
 			pass
 		mousePos = pygame.mouse.get_pos()
@@ -141,7 +120,7 @@ class Text():
 		boolX = self.checkX(mouseX,area)
 		boolY = self.checkY(mouseY,area)
 		if boolX == True and boolY == True:
-			if self.hueVal != 2:
+			if self.hueVal != 2 and sound:
 				# self.hoverSound.playMusic(0)
 				self.scrollSound.play()
 				self.hueVal = 2
@@ -163,14 +142,12 @@ class Text():
 		# print stuff
 		string = str(self.text)
 		area = self.font.size(string)
-		
-
 		if not self.clicked:
 			if self.checkClicked(area):
 				label = self.font.render(string,True,self.color[self.hueVal])
 				self.clickSound.play()
 				self.clicked = True
-			elif self.checkHover(area):
+			elif self.checkHover(area,True):
 				label = self.font.render(string,True,self.color[self.hueVal])
 			else:
 				self.hueVal = 1
@@ -178,9 +155,33 @@ class Text():
 		else:
 			self.hueVal = 0
 			label = self.font.render(string,True,self.color[self.hueVal])
-
-
 		view.screen.blit(label,(self.x,self.y))
+
+	def printTexttrans(self,view):
+		# print stuff
+		string = str(self.text)
+		area = self.font.size(string)
+		if not self.clicked:
+			if self.checkHover(area,False):
+				pass
+			else:
+				label = self.font.render(string,True,self.color)
+				view.screen.blit(label,(self.x,self.y))
+
+	def printTextnormal(self,view):
+		# print stuff
+		string = str(self.text)
+		area = self.font.size(string)
+		label = self.font.render(string,True,self.color[1])
+		view.screen.blit(label,(self.x,self.y))
+
+	def printTextnormalSmall(self,view):
+		# print stuff
+		string = str(self.text)
+		area = self.fontSmall.size(string)
+		label = self.fontSmall.render(string,True,self.color[1])
+		view.screen.blit(label,(self.x,self.y))
+
 
 
 class View(object):
@@ -188,7 +189,6 @@ class View(object):
 		pygame.init()
 		self.size=(0,0)	
 		self.font = pygame.font.Font(None, 24)
-		# self.titleScreen = pygame.image.load('./KKE.jpg')
 		self.BLACK    = (   0,   0,   0)
 		self.WHITE    = ( 255, 255, 255)
 		self.GREEN    = (   25, 255,   25)
@@ -205,6 +205,7 @@ class View(object):
 		self.optionsBackground = pygame.image.load('./KKEoptions.png')
 		play = Text('Play',RED,100,450)
 		options = Text('Options',RED,100,520)
+		story = Text('Story',RED,250,450)
 		quit = Text('Quit',RED,100,590)
 		self.titleMusic.play(-1,0)
 		while True:
@@ -213,9 +214,13 @@ class View(object):
 			play.printText(self)
 			options.printText(self)
 			quit.printText(self)
+			story.printText(self)
 			pygame.display.flip()
 			if quit.clicked:
 				self.quitGame()
+			if story.clicked:
+				self.storyRunning()
+				story.clicked = False
 			if options.clicked:
 				self.optionsRunning()
 				options.clicked = False
@@ -240,13 +245,13 @@ class View(object):
 
 		while True:
 			self.screen.blit(self.optionsBackground, (0, 0))
-			difficulty.printText(self)
+			difficulty.printTextnormal(self)
 			easy.printText(self)
 			medium.printText(self)
 			hard.printText(self)
 			back.printText(self)
 
-			screenOpt.printText(self)
+			screenOpt.printTextnormal(self)
 			fullscreen.printText(self)
 			normal.printText(self)
 
@@ -266,6 +271,43 @@ class View(object):
 	def quitGame(self):
 		sys.exit()
 
+	def storyRunning(self):
+		self.optionsBackground = pygame.transform.scale(self.optionsBackground, (self.size[0], self.size[1]))
+		storyLineone = Text('It was half past 12:20 and all through the diner',RED,50,50)
+		storyLinetwo = Text('Not an employee was stirring, not even the fryer',RED,50,100)
+		storyLinethree = Text("Yet deep in the freezer's oldest recesses,",RED,50,150)
+		storyLinefour = Text('Plot sick, twisted meat cubes. The oldest confesses,',RED,50,200)
+		storyLinefive = Text('"'+"I've lived here too long, in this cold, dark, dank prison.",RED,50,250)
+		storyLinesix = Text("It's time for some payback, our army is risen!"+'"',RED,50,300)
+		storyLineseven = Text('These meat cubes rose up, gross, rotten, mutated,',RED,50,350)
+		storyLineeight = Text('Struck back at the cooks, refused to be plated.',RED,50,400)
+		storyLinenine = Text('They conquered the diner, took over this b*tch,',RED,50,450)
+		storyLineten = Text('But they never considered that shifts would be switched.',RED,50,500)
+		storyLineeleven = Text("It's time for your shift. Prepare for battle.",RED,50,600)
+
+		back = Text('Back',RED,650,585)
+		while True:
+			self.screen.blit(self.optionsBackground, (0, 0))
+			storyLineone.printTextnormalSmall(self)
+			storyLinetwo.printTextnormalSmall(self)
+			storyLinethree.printTextnormalSmall(self)
+			storyLinefour.printTextnormalSmall(self)
+			storyLinefive.printTextnormalSmall(self)
+			storyLinesix.printTextnormalSmall(self)
+			storyLineseven.printTextnormalSmall(self)
+			storyLineeight.printTextnormalSmall(self)
+			storyLinenine.printTextnormalSmall(self)
+			storyLineten.printTextnormalSmall(self)
+			storyLineeleven.printTextnormalSmall(self)
+
+			back.printText(self)
+
+			pygame.display.flip()
+			sleep(0.1)
+			if back.clicked:
+				back.clicked = False
+				break
+
 	def setup(self,data):
 		self.size	   = data['screenSize']
 		self.playerSize= data['playerSize']
@@ -282,23 +324,16 @@ class View(object):
 		self.titleMusic.stop()
 		self.gameMusic.play(-1)
 
-
 	def frame(self,data):
+		score = Text('10',self.BLACK,10,10)
 		self.screen.fill(self.WHITE)
-		
-
 		for player in data['players']:
 			pygame.draw.rect(self.screen, self.RED,[
 				player[0]-self.playerSize/2, 
 				player[1]-self.playerSize/2, 
 				self.playerSize,self.playerSize])
-		# for zombie in data['zombies']:
-			# self.screen.blit(self.zombieImg, [zombie[0], zombie[1]])
 		for zombie in data['zombies']:
-			pygame.draw.rect(self.screen, self.GREEN,[
-				zombie[0]-self.zombieSize/2, 
-				zombie[1]-self.zombieSize/2, 
-				self.zombieSize,self.zombieSize])
+			self.screen.blit(self.zombieImg, [zombie[0], zombie[1]])
 		for bullet in data['bullets']:
 			pygame.draw.rect(self.screen, self.BLACK,[
 				bullet[0]-self.bulletSize/2,
@@ -307,6 +342,7 @@ class View(object):
 		for (i,player) in enumerate(data['players']):
 			health = self.font.render(str(data['health'][i]), 1, (10, 10, 10))
 			self.screen.blit(health, (player[0]-self.playerSize/4, player[1]-self.playerSize/2))
+		# score.printTexttrans(self)
 		pygame.display.flip()
 
 if len(sys.argv) != 2:
