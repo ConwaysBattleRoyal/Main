@@ -15,6 +15,7 @@ class Client(ConnectionListener):
 	def Loop(self):
 		connection.Pump()
 		self.Pump()
+		sleep(.01)
 
 		for event in pygame.event.get():
 			if event.type ==KEYDOWN and event.key == K_ESCAPE:
