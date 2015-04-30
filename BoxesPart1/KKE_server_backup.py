@@ -171,7 +171,7 @@ class Zombie(object):
 					for player in model.players:
 						if not random.randint(0,3):
 							player.health+=1
-					if all([player.health>=player.maxhealth for player in model.players]) and model.popCap<30:
+					if all([player.health>=player.maxhealth for player in model.players]) and model.popCap<20:
 						model.popCap+=1
 
 class Bullet(object):
