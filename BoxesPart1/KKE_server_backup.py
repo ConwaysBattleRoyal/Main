@@ -16,8 +16,8 @@ class ClientChannel(Channel):
 	def __init__(self, *args, **kwargs):
 		self.pos=[screenSize[0]/2,screenSize[1]/2]
 		self.move=[0,0]
-		self.maxhealth=20
-		self.health=15
+		self.maxhealth=10
+		self.health=5
 		self.shootDirection=()
 		self.bulletTimer=time.time()
 		Channel.__init__(self, *args, **kwargs)
@@ -68,6 +68,8 @@ class Standard(object):
 		self.run=1
 		self.health=5
 		self.prock=100
+	def show(self):
+		print self.walk, self.run, self.health, self.prock 
 
 class Zombie(object):
 	def __init__(self,standard):
@@ -111,10 +113,10 @@ class Zombie(object):
 		model.regZomb.prock*=self.prockDistanceDev
 
 	def enhance(self):
-		model.regZomb.walk*=1.1
-		model.regZomb.run*=1.1
-		model.regZomb.health*=1.1
-		model.regZomb.prock*=1.1
+		model.regZomb.walk+=.1
+		model.regZomb.run+=.1
+		model.regZomb.health+=1
+		model.regZomb.prock+=10
 
 	def update(self,playerPositions):
 		#determine the closest player and prock if they are too damn close
@@ -148,16 +150,19 @@ class Zombie(object):
 			self.living=False
 			closestPlayer.health-=2
 			self.evolve()
-			if all([player.health<=player.maxhealth/2 for player in model.players]) and model.popCap>10:
+			if all([player.health<=player.maxhealth/2 for player in model.players]) and model.popCap>10: 
+			# if all the players are below half health and there are more than ten zombies, make it easier
 				model.popCap-=1
 
 		#h is the distance between centerpoints of the bullets and the zombies
 		h=(zombieSize+bulletSize)/2
 		for bullet in model.bulletList:
+			#if hit:
 			if self.pos[0]-h<bullet.pos[0]<self.pos[0]+h and self.pos[1]-h<bullet.pos[1]<self.pos[1]+h:
 				self.procked=True
 				bullet.living=False
 				self.health-=1
+				# if dead:
 				if self.health<=0:
 					model.score+=1
 					if not model.score%20:
